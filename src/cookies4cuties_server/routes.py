@@ -172,7 +172,7 @@ async def create_order(
         # The database supplies the order ID and timestamp.
         order_data = {
             "email": email,
-            "phone_number": phone_number,
+            "phone": phone_number,
             "items": validated_items,
             "total_price": str(total_price),
             "pickup_location": pickup_location,
@@ -212,6 +212,7 @@ async def create_order(
                 ).remove([storage_path])
             except Exception:
                 pass
+        print(exc)
 
         raise HTTPException(
             502,
