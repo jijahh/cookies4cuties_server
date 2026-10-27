@@ -1,0 +1,23 @@
+[project]
+name = "cookies4cuties-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "jijahh", email = "elijahisraelg@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi[standard]>=0.162.0",
+    "pydantic-settings>=2.16.1",
+    "python-multipart>=0.0.32",
+    "supabase>=2.33.0",
+    "uvicorn>=0.54.0",
+]
+
+[project.scripts]
+cookies4cuties-server = "cookies4cuties_server:main"
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
