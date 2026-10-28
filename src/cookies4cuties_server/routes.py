@@ -443,17 +443,8 @@ async def update_order(
         update_data["payment_verified"] = payment_verified
     try:
         response = (
-            # supabase.table("orders")
-            # .select("*")
-            # .eq("id", order_id)
-            # .execute()
-            supabase.table("orders")
-            .update(update_data)
-            .eq("id", order_id)
-            .execute()
+            supabase.table("orders").update(update_data).eq("id", order_id).execute()
         )
-        print(update_data)
-        print(response.data)
         if not response.data:
             raise HTTPException(status_code=404, detail="Order not found")
 
