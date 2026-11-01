@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cookies for Cuties · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#b9e4ec; --card:#fff; --maroon:#8a3b3b; --maroon-d:#6e2c2c;
+    --ink:#3b2a2a; --muted:#8c7a7a; --line:#eadcdc; --pink:#ffe3e3;
+    --green:#d8f3dc; --green-t:#2d6a4f; --amber:#fff1c9; --amber-t:#8a6100;
+    --red:#ff4d4d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;padding:20px 14px 60px}
+  h1,h2,.chewy{font-family:Chewy,cursive;color:var(--maroon);font-weight:400;letter-spacing:.5px}
+  .wrap{max-width:960px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  header h1{font-size:2.4rem;margin:0;text-shadow:2px 2px 0 #fff,-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff}
+  .card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+  label{font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px}
+  input,select{width:100%;padding:9px 10px;border:2px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+  input:focus,select:focus{outline:none;border-color:var(--maroon)}
+  button{font-family:Chewy,cursive;font-size:1rem;border:0;border-radius:999px;padding:8px 16px;cursor:pointer;background:var(--maroon);color:#fff;transition:.15s}
+  button:hover{background:var(--maroon-d);transform:translateY(-1px)}
+  button.ghost{background:var(--pink);color:var(--maroon)}
+  button.ghost:hover{background:#ffd0d0}
+  button:disabled{opacity:.4;cursor:default;transform:none}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .stat{flex:1;min-width:130px;text-align:center}
+  .stat b{display:block;font-family:Chewy;font-size:1.8rem;color:var(--maroon);font-weight:400}
+  .stat span{font-size:.75rem;color:var(--muted);font-weight:800;text-transform:uppercase}
+  .order{margin-bottom:12px}
+  .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start}
+  .id{font-family:Chewy;font-size:1.4rem;color:var(--maroon)}
+  .total{font-family:Chewy;font-size:1.6rem}
+  .meta{font-size:.85rem;color:var(--muted);margin:2px 0}
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+  .badge{font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--pink);color:var(--maroon);text-transform:uppercase}
+  .badge.ok{background:var(--green);color:var(--green-t)}
+  .badge.wait{background:var(--amber);color:var(--amber-t)}
+  .items{border-top:2px dashed var(--line);border-bottom:2px dashed var(--line);padding:8px 0;margin:8px 0;font-size:.9rem}
+  .items div{display:flex;justify-content:space-between}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .actions select{width:auto}
+  .pager{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:16px}
+  .empty{text-align:center;padding:30px;color:var(--muted)}
+  #login{max-width:360px;margin:12vh auto;text-align:center}
+  #login h1{font-size:2.6rem;margin:0 0 6px}
+  #login input{margin:12px 0;text-align:center}
+  .err{color:var(--red);font-weight:800;font-size:.85rem;min-height:1.2em}
+  .hidden{display:none!important}
+  a{color:var(--maroon);font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="login" class="card">
+    <h1>Cookies for Cuties</h1>
+    <div class="chewy" style="font-size:1.3rem">Admin Login 🍪</div>
+    <input id="keyInput" type="password" placeholder="Admin key" autocomplete="current-password">
+    <div class="err" id="loginErr"></div>
+    <button id="loginBtn">Let me in →</button>
+  </div>
+
+  <div id="app" class="hidden">
+    <header>
+      <h1>Orders 🍪</h1>
+      <div style="display:flex;gap:8px">
+        <button id="refreshBtn">Refresh</button>
+        <button id="logoutBtn" class="ghost">Log out</button>
+      </div>
+    </header>
+
+    <div class="stats">
+      <div class="card stat"><b id="sCount">0</b><span>Orders shown</span></div>
+      <div class="card stat"><b id="sPending">0</b><span>Pending</span></div>
+      <div class="card stat"><b id="sUnverified">0</b><span>Unverified payments</span></div>
+      <div class="card stat"><b id="sRevenue">₱0</b><span>Total shown</span></div>
+    </div>
+
+    <div class="card filters">
+      <div><label>Search email</label><input id="fEmail" placeholder="name@email.com"></div>
+      <div><label>Status</label>
+        <select id="fStatus"><option value="">All</option><option>pending</option><option>confirmed</option><option>ready</option><option>completed</option><option>cancelled</option></select></div>
+      <div><label>Payment</label>
+        <select id="fPay"><option value="">All</option><option value="online">Online</option><option value="cash_on_pickup">Cash on pickup</option><option value="cash_on_delivery">Cash on delivery</option></select></div>
+      <div><label>Verified</label>
+        <select id="fVerified"><option value="">All</option><option value="true">Verified</option><option value="false">Not verified</option></select></div>
+      <div><label>Pickup</label>
+        <select id="fLoc"><option value="">All</option><option value="pampanga">Pampanga</option><option value="katipunan">Katipunan</option><option value="rockwell">Rockwell</option></select></div>
+      <div><label>Sort</label>
+        <select id="fSort"><option value="created_at:desc">Newest first</option><option value="created_at:asc">Oldest first</option><option value="total_price:desc">Highest total</option><option value="total_price:asc">Lowest total</option></select></div>
+    </div>
+
+    <div id="list"></div>
+    <div class="pager">
+      <button id="prevBtn" class="ghost">← Prev</button>
+      <span id="pageLabel" class="chewy"></span>
+      <button id="nextBtn" class="ghost">Next →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "";
+const PROOF_BASE = "";
+const PAGE_SIZE = 20;
+const STATUSES = ["pending","confirmed","ready","completed","cancelled"];
+
+let adminKey = sessionStorage.getItem("adminKey") || "";
+let offset = 0;
+const $ = id => document.getElementById(id);
+const peso = n => "₱" + Number(n).toLocaleString("en-PH",{maximumFractionDigits:2});
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function api(path, opts = {}) {
+  const res = await fetch(API_BASE + path, {
+    ...opts,
+    headers: { "x-admin-key": adminKey, ...(opts.headers || {}) },
+  });
+  if (res.status === 401 || res.status === 403) { logout("Wrong admin key 🥺"); throw new Error("auth"); }
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
+  return res.json();
+}
+
+async function loadOrders() {
+  const p = new URLSearchParams({ limit: PAGE_SIZE, offset });
+  const [sortBy, sortOrder] = $("fSort").value.split(":");
+  p.set("sort_by", sortBy); p.set("sort_order", sortOrder);
+  const map = { email:"fEmail", order_status:"fStatus", payment_method:"fPay", payment_verified:"fVerified", pickup_location:"fLoc" };
+  for (const [param, id] of Object.entries(map)) { const v = $(id).value.trim(); if (v) p.set(param, v); }
+
+  $("list").innerHTML = '<div class="empty chewy">Baking your orders…</div>';
+  try {
+    const orders = await api("/admin/orders?" + p);
+    render(orders);
+  } catch (e) {
+    if (e.message !== "auth") $("list").innerHTML = `<div class="card empty">Oops: ${esc(e.message)}</div>`;
+  }
+}
+
+async function updateOrder(id, fields) {
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(fields)) fd.append(k, v);
+  try { await api(`/admin/orders/${id}`, { method: "PATCH", body: fd }); loadOrders(); }
+  catch (e) { if (e.message !== "auth") alert("Update failed: " + e.message); }
+}
+
+function parseItems(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; }
+    catch { return []; }
+  }
+  return [];
+}
+
+function render(orders) {
+  $("sCount").textContent = orders.length;
+  $("sPending").textContent = orders.filter(o => o.order_status === "pending").length;
+  $("sUnverified").textContent = orders.filter(o => !o.payment_verified).length;
+  $("sRevenue").textContent = peso(orders.reduce((s,o)=>s+Number(o.total_price||0),0));
+  $("pageLabel").textContent = "Page " + (offset / PAGE_SIZE + 1);
+  $("prevBtn").disabled = offset === 0;
+  $("nextBtn").disabled = orders.length < PAGE_SIZE;
+
+  if (!orders.length) { $("list").innerHTML = '<div class="card empty chewy">No orders found 🍪</div>'; return; }
+
+  $("list").innerHTML = orders.map(o => {
+    const items = parseItems(o.items).map(i =>
+      `<div><span>Product #${esc(i.product_id)}</span><span>× ${esc(i.quantity)}</span></div>`).join("");
+    const proof = o.proof_url
+      ? (PROOF_BASE ? `<a href="${esc(PROOF_BASE + o.proof_url)}" target="_blank" rel="noopener">View proof</a>`
+                    : `<span class="meta">Proof: ${esc(o.proof_url)}</span>`)
+      : "";
+    const date = o.created_at ? new Date(o.created_at).toLocaleString("en-PH",{dateStyle:"medium",timeStyle:"short"}) : "";
+    const opts = STATUSES.map(s => `<option ${s===o.order_status?"selected":""}>${s}</option>`).join("");
+    return `
+    <div class="card order">
+      <div class="top">
+        <div>
+          <div class="id">Order #${esc(o.id)}</div>
+          <div class="meta">${esc(date)}</div>
+          <div class="meta">${esc(o.email)} · ${esc(o.phone)}</div>
+          <div class="meta">📍 ${esc(o.pickup_location)}</div>
+        </div>
+        <div class="total">${peso(o.total_price)}</div>
+      </div>
+      <div class="badges">
+        <span class="badge ${o.order_status==='pending'?'wait':'ok'}">${esc(o.order_status)}</span>
+        <span class="badge">${esc(String(o.payment_method).replace(/_/g," "))}</span>
+        <span class="badge ${o.payment_verified?'ok':'wait'}">${o.payment_verified?'paid ✓':'unverified'}</span>
+      </div>
+      <div class="items">${items}</div>
+      <div class="actions">
+        <select data-status="${o.id}">${opts}</select>
+        ${o.payment_verified ? "" : `<button data-verify="${o.id}">Mark paid ✓</button>`}
+        ${proof}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+$("list").addEventListener("change", e => {
+  const id = e.target.dataset.status;
+  if (id) updateOrder(id, { order_status: e.target.value });
+});
+$("list").addEventListener("click", e => {
+  const id = e.target.dataset.verify;
+  if (id && confirm(`Mark order #${id} as paid?`)) updateOrder(id, { payment_verified: true });
+});
+
+let t;
+["fStatus","fPay","fVerified","fLoc","fSort"].forEach(id => $(id).addEventListener("change", () => { offset = 0; loadOrders(); }));
+$("fEmail").addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => { offset = 0; loadOrders(); }, 400); });
+$("refreshBtn").onclick = loadOrders;
+$("prevBtn").onclick = () => { offset = Math.max(0, offset - PAGE_SIZE); loadOrders(); };
+$("nextBtn").onclick = () => { offset += PAGE_SIZE; loadOrders(); };
+
+function showApp() { $("login").classList.add("hidden"); $("app").classList.remove("hidden"); loadOrders(); }
+function logout(msg = "") {
+  adminKey = ""; sessionStorage.removeItem("adminKey");
+  $("app").classList.add("hidden"); $("login").classList.remove("hidden");
+  $("loginErr").textContent = msg;
+}
+$("logoutBtn").onclick = () => logout();
+$("loginBtn").onclick = () => {
+  adminKey = $("keyInput").value.trim(); if (!adminKey) return;
+  sessionStorage.setItem("adminKey", adminKey); $("loginErr").textContent = ""; showApp();
+};
+$("keyInput").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+
+if (adminKey) showApp();
+</script>
+</body>
+</html>

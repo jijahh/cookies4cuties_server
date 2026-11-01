@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client
+from pathlib import Path 
+from fastapi.responses import FileResponse
 
 from cookies4cuties_server.config import get_settings
 from cookies4cuties_server.routes import router
@@ -49,3 +51,7 @@ app.add_middleware(
 )
 
 app.include_router(router)
+
+@app.get("/admin", include_in_schema=False)
+def admin_page():
+    return FileResponse(Path(__file__).parent / "static" / "admin.html")
