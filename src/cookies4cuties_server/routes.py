@@ -18,6 +18,7 @@ from fastapi import (
 from .auth import require_admin
 from .config import get_settings
 from .supabase_client import get_supabase
+from .utils import send_email
 
 router = APIRouter()
 settings = get_settings()
@@ -56,8 +57,7 @@ async def create_order(
     total_price: Annotated[Decimal, Form(gt=0)],
     pickup_location: Annotated[str, Form()],
     payment_method: Annotated[str, Form()],
-    proof_of_payment: Annotated[
-        UploadFile | None,
+    proof_of_payment: Annotated[ UploadFile | None,
         File(description="Required for online payments"),
     ] = None,
 ):
@@ -167,12 +167,21 @@ async def create_order(
 
             uploaded_to_storage = True
 
+        print("product_id", [item["product_id"] for item in validated_items])
+        validated_product_prices = supabase.table("products").select("product_id", "unit_price").in_("product_id", [item["product_id"] for item in validated_items]).execute()
+        validated_total_price = Decimal("0.00")
+        for item in validated_items:
+            for product in validated_product_prices.data:
+                if product["id"] == item["product_id"]:
+                    total_price += Decimal(product["unit_price"]) * item["quantity"]
+                    break
+
         # The database supplies the order ID and timestamp.
         order_data = {
             "email": email,
             "phone": phone_number,
             "items": validated_items,
-            "total_price": str(total_price),
+            "total_price": str(validated_total_price),
             "pickup_location": pickup_location,
             "payment_method": payment_method,
             "proof_url": storage_path,
@@ -184,6 +193,8 @@ async def create_order(
 
         if not result.data:
             raise RuntimeError("No order record was returned.")
+
+        #send_email(email, order_data["order_status"])
 
         return result.data[0]
 
