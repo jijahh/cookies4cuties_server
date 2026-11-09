@@ -185,7 +185,9 @@ async def create_order(
                         item["quantity"],
                         item["quantity"] * Decimal(product["unit_price"]),
                     )
-                    total_price += Decimal(product["unit_price"]) * item["quantity"]
+                    validated_total_price += (
+                        Decimal(product["unit_price"]) * item["quantity"]
+                    )
                     break
 
         # The database supplies the order ID and timestamp.
