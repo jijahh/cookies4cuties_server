@@ -13,11 +13,13 @@ from fastapi import (
     HTTPException,
     Query,
     UploadFile,
+    BackgroundTasks,
 )
 
 from .auth import require_admin
 from .config import get_settings
 from .supabase_client import get_supabase
+from .utils import send_email
 
 router = APIRouter()
 settings = get_settings()
@@ -46,6 +48,7 @@ PAYMENT_METHODS = {
 
 @router.post("/orders", status_code=201)
 async def create_order(
+    background_tasks: BackgroundTasks,
     supabase: SupabaseDep,
     email: Annotated[str, Form()],
     phone_number: Annotated[str, Form()],
@@ -167,12 +170,30 @@ async def create_order(
 
             uploaded_to_storage = True
 
+        validated_product_prices = (
+            supabase.table("products")
+            .select("product_id", "product_name", "unit_price")
+            .in_("product_id", [item["product_id"] for item in validated_items])
+            .execute()
+        )
+        validated_total_price = Decimal("0.00")
+        product_price_receipt = {}
+        for item in validated_items:
+            for product in validated_product_prices.data:
+                if product["product_id"] == item["product_id"]:
+                    product_price_receipt[product["product_name"]] = (
+                        item["quantity"],
+                        item["quantity"] * Decimal(product["unit_price"]),
+                    )
+                    total_price += Decimal(product["unit_price"]) * item["quantity"]
+                    break
+
         # The database supplies the order ID and timestamp.
         order_data = {
             "email": email,
             "phone": phone_number,
             "items": validated_items,
-            "total_price": str(total_price),
+            "total_price": str(validated_total_price),
             "pickup_location": pickup_location,
             "payment_method": payment_method,
             "proof_url": storage_path,
@@ -184,6 +205,17 @@ async def create_order(
 
         if not result.data:
             raise RuntimeError("No order record was returned.")
+
+        # send_email(email, order_data["order_status"])
+        background_tasks.add_task(
+            send_email,
+            email,
+            order_data["order_status"],
+            pickup_location,
+            payment_method,
+            product_price_receipt,
+            validated_total_price,
+        )
 
         return result.data[0]
 
