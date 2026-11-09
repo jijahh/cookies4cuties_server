@@ -193,7 +193,7 @@ async def create_order(
             "email": email,
             "phone": phone_number,
             "items": validated_items,
-            "total_price": str(validated_total_price),
+            "total_price": validated_total_price,
             "pickup_location": pickup_location,
             "payment_method": payment_method,
             "proof_url": storage_path,
