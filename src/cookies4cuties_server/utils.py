@@ -21,8 +21,6 @@ def send_email(
     msg["Date"] = formatdate(localtime=True)
     msg["Message-ID"] = make_msgid()
     msg["Reply-To"] = SENDER_EMAIL
-    pickup_location = "rockwell"
-    payment_method = "GCash"
 
     # 1. Generate the HTML table rows for items dynamically
     item_rows_html = ""

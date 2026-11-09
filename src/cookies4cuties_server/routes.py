@@ -160,9 +160,9 @@ async def create_order(
                 )
 
             extension = ALLOWED_IMAGE_TYPES[content_type]
-            storage_path = f"orders/{uuid4().hex}.{extension}"
+            storage_path = f"{uuid4().hex}.{extension}"
 
-            bucket = supabase.storage.from_(settings.supabase_storage_bucket)
+            bucket = supabase.storage.from_(settings.supabase_storage_bucket_orders)
 
             bucket.upload(
                 storage_path,
@@ -205,7 +205,7 @@ async def create_order(
             "pickup_location": pickup_location,
             "payment_method": payment_method,
             "proof_url": public_image_url,
-            "order_status": "pending" if payment_method == "online" else "confirmed",
+            "order_status": "pending",
             "payment_verified": False,
             "customer_name": customer_name,
         }
@@ -231,7 +231,7 @@ async def create_order(
     except HTTPException:
         if uploaded_to_storage and storage_path:
             try:
-                supabase.storage.from_(settings.supabase_storage_bucket).remove(
+                supabase.storage.from_(settings.supabase_storage_bucket_orders).remove(
                     [storage_path]
                 )
             except Exception:
@@ -241,7 +241,7 @@ async def create_order(
     except Exception as exc:
         if uploaded_to_storage and storage_path:
             try:
-                supabase.storage.from_(settings.supabase_storage_bucket).remove(
+                supabase.storage.from_(settings.supabase_storage_bucket_orders).remove(
                     [storage_path]
                 )
             except Exception:
@@ -411,7 +411,7 @@ async def create_product(
             extension = allowed_types[image.content_type]
             storage_path = f"products/{uuid4().hex}.{extension}"
 
-            bucket = supabase.storage.from_(settings.supabase_storage_bucket)
+            bucket = supabase.storage.from_(settings.supabase_storage_bucket_products)
 
             bucket.upload(
                 storage_path,
@@ -444,9 +444,9 @@ async def create_product(
     except HTTPException:
         if uploaded_to_storage and storage_path:
             try:
-                supabase.storage.from_(settings.supabase_storage_bucket).remove(
-                    [storage_path]
-                )
+                supabase.storage.from_(
+                    settings.supabase_storage_bucket_products
+                ).remove([storage_path])
             except Exception:
                 pass
         raise
@@ -454,9 +454,9 @@ async def create_product(
     except Exception as exc:
         if uploaded_to_storage and storage_path:
             try:
-                supabase.storage.from_(settings.supabase_storage_bucket).remove(
-                    [storage_path]
-                )
+                supabase.storage.from_(
+                    settings.supabase_storage_bucket_products
+                ).remove([storage_path])
             except Exception:
                 pass
 
