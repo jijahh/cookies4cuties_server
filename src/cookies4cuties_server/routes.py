@@ -13,6 +13,7 @@ from fastapi import (
     HTTPException,
     Query,
     UploadFile,
+    BackgroundTasks,
 )
 
 from .auth import require_admin
@@ -47,6 +48,7 @@ PAYMENT_METHODS = {
 
 @router.post("/orders", status_code=201)
 async def create_order(
+    background_tasks: BackgroundTasks,
     supabase: SupabaseDep,
     email: Annotated[str, Form()],
     phone_number: Annotated[str, Form()],
@@ -57,7 +59,8 @@ async def create_order(
     total_price: Annotated[Decimal, Form(gt=0)],
     pickup_location: Annotated[str, Form()],
     payment_method: Annotated[str, Form()],
-    proof_of_payment: Annotated[ UploadFile | None,
+    proof_of_payment: Annotated[
+        UploadFile | None,
         File(description="Required for online payments"),
     ] = None,
 ):
@@ -167,12 +170,21 @@ async def create_order(
 
             uploaded_to_storage = True
 
-        print("product_id", [item["product_id"] for item in validated_items])
-        validated_product_prices = supabase.table("products").select("product_id", "unit_price").in_("product_id", [item["product_id"] for item in validated_items]).execute()
+        validated_product_prices = (
+            supabase.table("products")
+            .select("product_id", "product_name", "unit_price")
+            .in_("product_id", [item["product_id"] for item in validated_items])
+            .execute()
+        )
         validated_total_price = Decimal("0.00")
+        product_price_receipt = {}
         for item in validated_items:
             for product in validated_product_prices.data:
-                if product["id"] == item["product_id"]:
+                if product["product_id"] == item["product_id"]:
+                    product_price_receipt[product["product_name"]] = (
+                        item["quantity"],
+                        item["quantity"] * Decimal(product["unit_price"]),
+                    )
                     total_price += Decimal(product["unit_price"]) * item["quantity"]
                     break
 
@@ -194,7 +206,16 @@ async def create_order(
         if not result.data:
             raise RuntimeError("No order record was returned.")
 
-        #send_email(email, order_data["order_status"])
+        # send_email(email, order_data["order_status"])
+        background_tasks.add_task(
+            send_email,
+            email,
+            order_data["order_status"],
+            pickup_location,
+            payment_method,
+            product_price_receipt,
+            validated_total_price,
+        )
 
         return result.data[0]
 
