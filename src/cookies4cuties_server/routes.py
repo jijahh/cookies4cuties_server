@@ -50,6 +50,7 @@ PAYMENT_METHODS = {
 async def create_order(
     background_tasks: BackgroundTasks,
     supabase: SupabaseDep,
+    customer_name: Annotated[str, Form()],
     email: Annotated[str, Form()],
     phone_number: Annotated[str, Form()],
     items: Annotated[
@@ -67,6 +68,7 @@ async def create_order(
     """Create an order and upload its payment proof, if applicable."""
 
     storage_path = None
+    public_image_url = None
     uploaded_to_storage = False
 
     try:
@@ -76,6 +78,9 @@ async def create_order(
 
         if "@" not in email or "." not in email.rsplit("@", 1)[-1]:
             raise HTTPException(422, "Invalid email address.")
+
+        if not customer_name:
+            raise HTTPException(422, "Customer name is required")
 
         if not phone_number:
             raise HTTPException(422, "Phone number is required.")
@@ -169,6 +174,7 @@ async def create_order(
             )
 
             uploaded_to_storage = True
+            public_image_url = bucket.get_public_url(storage_path)
 
         validated_product_prices = (
             supabase.table("products")
@@ -198,9 +204,10 @@ async def create_order(
             "total_price": float(validated_total_price),
             "pickup_location": pickup_location,
             "payment_method": payment_method,
-            "proof_url": storage_path,
+            "proof_url": public_image_url,
             "order_status": "pending" if payment_method == "online" else "confirmed",
-            "payment_verified": False if payment_method == "online" else True,
+            "payment_verified": False,
+            "customer_name": customer_name,
         }
 
         result = supabase.table("orders").insert(order_data).execute()
@@ -258,6 +265,7 @@ async def create_order(
 def get_orders(
     supabase: SupabaseDep,
     order_status: str | None = None,
+    customer_name: str | None = None,
     payment_method: str | None = None,
     payment_verified: bool | None = None,
     email: str | None = None,
@@ -304,6 +312,9 @@ def get_orders(
 
     if email:
         query = query.ilike("email", f"%{email.strip()}%")
+
+    if customer_name:
+        query = query.ilike("customer_name", f"%{email.strip()}%")
 
     if pickup_location:
         query = query.eq("pickup_location", pickup_location)
@@ -362,6 +373,7 @@ async def create_product(
 
     storage_path = None
     uploaded_to_storage = False
+    public_image_url = None
 
     try:
         # Optionally upload the product image.
@@ -411,13 +423,14 @@ async def create_product(
             )
 
             uploaded_to_storage = True
+            public_image_url = bucket.get_public_url(storage_path)
 
         # Insert product details into the database.
         product_data = {
             "product_name": product_name,
             "unit_price": str(unit_price),
             "product_details": product_details.strip(),
-            "product_image_path": storage_path,
+            "product_image_path": public_image_url,
             "active": active,
         }
 
