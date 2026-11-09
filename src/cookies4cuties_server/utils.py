@@ -102,7 +102,7 @@ def send_email(
                                 </table>
 
                                 <p style="margin: 0; font-family: sans-serif; font-size: 15px; line-height: 1.6; color: #4a5568;">
-                                    If you have any changes or questions regarding your order, reply directly to this email. See you soon!
+                                    If you have any changes or questions regarding your order, reply directly to this email. Also, if your Mode of payment is COD, please reply with <strong> "Yes" </strong> so that we can confirm your order. See you soon!
                                 </p>
                             </td>
                         </tr>
