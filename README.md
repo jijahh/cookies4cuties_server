@@ -2,6 +2,7 @@
 
 A robust, asynchronous backend API built with **FastAPI** and **Supabase** designed to manage online ordering, product catalogs, administrative workflows, and secure image uploads for a boutique bakery.
 
+🍪 **Orders Frontend**: [https://cookies4cuties-rho.vercel.app/](https://cookies4cuties-rho.vercel.app/)  
 🔗 **Live API**: [https://cookies4cuties-server.vercel.app/](https://cookies4cuties-server.vercel.app/)  
 📖 **Interactive Docs**: [https://cookies4cuties-server.vercel.app/docs](https://cookies4cuties-server.vercel.app/docs)
 
