@@ -1,0 +1,11 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_ZLpOf5cUqC4sXhg7FpalSCLgkq8q",
+      "name": "cookies4cuties-server",
+      "directory": ".",
+      "orgId": "team_XZkGPBQ2iFZ6UMcMDjuQpBYz"
+    }
+  ]
+}

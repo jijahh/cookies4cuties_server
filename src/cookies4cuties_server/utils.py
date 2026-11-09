@@ -26,6 +26,7 @@ def send_email(
 
     # 1. Generate the HTML table rows for items dynamically
     item_rows_html = ""
+    item_rows_text = []
     for item_name, item_details in items.items():
         item_rows_html += f"""
         <tr>
@@ -34,6 +35,9 @@ def send_email(
             <td style="padding: 12px; border-bottom: 1px solid #eeeeee; font-family: sans-serif; font-size: 15px; color: #4a5568; text-align: right;">₱{item_details[1]}</td>
         </tr>
         """
+        item_rows_text.append(
+            f"{item_name}: {item_details[0]} pcs | Total: {item_details[1]}"
+        )
 
     # 2. Build the main HTML email body
     html_body = f"""
